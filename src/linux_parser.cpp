@@ -18,9 +18,6 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-/***
- *
- */
 template <typename T>
 T GenericParsingFunction(const string& key) {
   ifstream stat_file(LinuxParser::kProcDirectory + LinuxParser::kStatFilename);

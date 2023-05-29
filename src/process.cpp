@@ -49,6 +49,9 @@ string Process::Ram() {
     string key;
     long value;
     if (iss >> key >> value) {
+      // kSystemProcMem == VmRss
+      // I avoided using VmSize based on a reviewer's comments since it gives
+      // the physical size + the virtual size
       if (key == LinuxParser::kSystemProcMem) {
         ram = to_string(value / 1024);
         break;
