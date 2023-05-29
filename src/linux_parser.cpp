@@ -132,7 +132,7 @@ long int LinuxParser::UpTime() {
   ifstream uptime_file(kProcDirectory + kUptimeFilename);
   string line;
   if (!uptime_file.is_open()) {
-    throw std::invalid_argument("could not open uptime file");
+    throw std::runtime_error("could not open uptime file");
   }
   getline(uptime_file, line);
   istringstream ss(line);
@@ -212,21 +212,22 @@ long LinuxParser::IdleJiffies() {
 
 // Reads and returns CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
-  std::ifstream filestream(kProcDirectory + kStatFilename);
+  std::ifstream stat_file(kProcDirectory + kStatFilename);
   string line;
   string key;
   std::vector<string> cpu_utilization;
-  if (filestream.is_open()) {
-    while (std::getline(filestream, line)) {
-      std::istringstream linestream(line);
-      linestream >> key;
-      if (key == "cpu") {
-        string value;
-        while (linestream >> value) {
-          cpu_utilization.emplace_back(value);
-        }
-        break;
+  if (!stat_file.is_open()) {
+    throw runtime_error("cannot open stat file");
+  }
+  while (std::getline(stat_file, line)) {
+    std::istringstream linestream(line);
+    linestream >> key;
+    if (key == "cpu") {
+      string value;
+      while (linestream >> value) {
+        cpu_utilization.emplace_back(value);
       }
+      break;  // BREAK AFTER CPU LINE
     }
   }
   return cpu_utilization;
