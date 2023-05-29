@@ -11,11 +11,7 @@
 #include "processor.h"
 #include "system.h"
 
-using std::ifstream;
-using std::istringstream;
-using std::string;
-using std::to_string;
-using std::vector;
+using namespace std;
 
 // Returns this process's ID
 int Process::Pid() { return pid_; }
@@ -23,7 +19,7 @@ int Process::Pid() { return pid_; }
 // Returns this process's CPU utilization
 float Process::CpuUtilization() {
   float total_time = LinuxParser::ActiveJiffies(pid_);
-  return 100 * (total_time / sysconf(_SC_CLK_TCK)) / UpTime();
+  return total_time / sysconf(_SC_CLK_TCK) / UpTime();
 }
 
 // Returns the command that generated this process
@@ -53,8 +49,9 @@ string Process::Ram() {
     string key;
     long value;
     if (iss >> key >> value) {
-      if (key == "VmSize:") {
+      if (key == LinuxParser::kSystemProcMem) {
         ram = to_string(value / 1024);
+        break;
       }
     }
   }
@@ -75,7 +72,7 @@ string Process::User() {
     string key;
     long value;
     if (iss >> key >> value) {
-      if (key == "Uid:") {
+      if (key == LinuxParser::kUserUID) {
         uid_ = to_string(value);
         break;
       }
@@ -134,4 +131,6 @@ long int Process::UpTime() {
   return sys_uptime - (starttime / clock_ticks);
 }
 
-bool Process::operator<(Process const& a) const { return pid_ < a.pid_; }
+bool Process::operator<(Process& a) {
+  return CpuUtilization() < a.CpuUtilization();
+}

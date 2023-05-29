@@ -11,10 +11,7 @@
 #include "process.h"
 #include "processor.h"
 
-using std::set;
-using std::size_t;
-using std::string;
-using std::vector;
+using namespace std;
 
 // Returns the system's CPU
 Processor& System::Cpu() { return cpu_; }
@@ -23,8 +20,7 @@ Processor& System::Cpu() { return cpu_; }
 vector<Process>& System::Processes() {
   processes_.clear();
   for (int& pid : LinuxParser::Pids()) {
-    Process process(pid);
-    processes_.emplace_back(process);
+    processes_.emplace_back(pid);
   }
   std::sort(processes_.begin(), processes_.end());
   return processes_;

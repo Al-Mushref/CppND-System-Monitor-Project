@@ -18,6 +18,31 @@ using std::string;
 using std::to_string;
 using std::vector;
 
+/***
+ *
+ */
+template <typename T>
+T GenericParsingFunction(const string& key) {
+  ifstream stat_file(LinuxParser::kProcDirectory + LinuxParser::kStatFilename);
+  if (!stat_file.is_open()) {
+    throw std::runtime_error("cannot open stat file");
+  }
+  string line;
+  T value{};
+  while (getline(stat_file, line)) {
+    istringstream ss(line);
+    string file_key;
+    int file_value;
+    if (ss >> file_key >> file_value) {
+      if (file_key == key) {
+        value = file_value;
+        break;
+      }
+    }
+  }
+  return value;
+}
+
 // Reads and returns the OS
 string LinuxParser::OperatingSystem() {
   string line;
@@ -55,6 +80,7 @@ string LinuxParser::Kernel() {
 }
 
 // Reads and returns the proccesses ids
+
 vector<int> LinuxParser::Pids() {
   vector<int> pids;
   DIR* directory = opendir(kProcDirectory.c_str());
@@ -64,7 +90,8 @@ vector<int> LinuxParser::Pids() {
     if (file->d_type == DT_DIR) {
       // Is every character of the name a digit?
       string filename(file->d_name);
-      if (std::all_of(filename.begin(), filename.end(), isdigit)) {
+      if (all_of(filename.begin(), filename.end(),
+                 [](unsigned char c) { return isdigit(c); })) {
         int pid = stoi(filename);
         pids.emplace_back(pid);
       }
@@ -88,11 +115,11 @@ float LinuxParser::MemoryUtilization() {
     float value;
 
     if (iss >> key >> value) {
-      if (key == "MemTotal:") {
+      if (key == kSystemMemTotal) {
         total_memory = value;
-      } else if (key == "MemFree:") {
+      } else if (key == kSystemMemFree) {
         free_memory = value;
-      } else if (key == "Bufers:") {
+      } else if (key == kSystemBuffers) {
         buffers = value;
       }
     }
@@ -185,64 +212,34 @@ long LinuxParser::IdleJiffies() {
 
 // Reads and returns CPU utilization
 vector<string> LinuxParser::CpuUtilization() {
-  ifstream stat_file(kProcDirectory + kStatFilename);
+  std::ifstream filestream(kProcDirectory + kStatFilename);
   string line;
-  vector<string> cpu_utilization;
-
-  if (!stat_file.is_open()) {
-    throw std::runtime_error("cannot open stat file");
-  }
-  getline(stat_file, line);
-  istringstream linestream(line);
-  string cpu_label;
-  linestream >> cpu_label;
-
-  if (cpu_label == "cpu") {
-    string value;
-    while (linestream >> value) {
-      cpu_utilization.emplace_back(value);
+  string key;
+  std::vector<string> cpu_utilization;
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      linestream >> key;
+      if (key == "cpu") {
+        string value;
+        while (linestream >> value) {
+          cpu_utilization.emplace_back(value);
+        }
+        break;
+      }
     }
   }
-
   return cpu_utilization;
 }
 
 // Reads and returns the total number of processes
 int LinuxParser::TotalProcesses() {
-  ifstream memory_info_file(kProcDirectory + kStatFilename);
-  string line;
-  int processes = 0;
-  while (getline(memory_info_file, line)) {
-    istringstream ss(line);
-    string key;
-    int value;
-    if (ss >> key >> value) {
-      if (key == "processes") {
-        processes = value;
-        break;
-      }
-    }
-  }
-  return processes;
+  return GenericParsingFunction<int>(kSystemProcesses);
 }
 
 // Reads and returns the number of running processes
 int LinuxParser::RunningProcesses() {
-  ifstream memory_info_file(kProcDirectory + kStatFilename);
-  string line;
-  int running_procs = 0;
-  while (getline(memory_info_file, line)) {
-    istringstream ss(line);
-    string key;
-    int value;
-    if (ss >> key >> value) {
-      if (key == "procs_running") {
-        running_procs = value;
-        break;
-      }
-    }
-  }
-  return running_procs;
+  return GenericParsingFunction<int>(kSystemRunningProcesses);
 }
 
 // Reads and returns the command associated with a process
