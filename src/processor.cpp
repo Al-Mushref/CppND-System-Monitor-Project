@@ -5,7 +5,5 @@
 
 // Returns the aggregate CPU utilization
 float Processor::Utilization() {
-  float total_time = LinuxParser::Jiffies();
-  float active_time = LinuxParser::ActiveJiffies();
-  return active_time / total_time;
+  return LinuxParser::ActiveJiffies() / LinuxParser::Jiffies();
 }

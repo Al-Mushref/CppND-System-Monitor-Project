@@ -483,7 +483,6 @@ CMakeFiles/monitor.dir/src/linux_parser.cpp.o: ../src/linux_parser.cpp \
   /usr/include/aarch64-linux-gnu/bits/getopt_core.h \
   /usr/include/aarch64-linux-gnu/bits/unistd_ext.h \
   /usr/include/linux/close_range.h \
-  /usr/include/c++/11/iostream \
   ../include/process.h
 
 CMakeFiles/monitor.dir/src/main.cpp.o: ../src/main.cpp \
@@ -1226,6 +1225,9 @@ CMakeFiles/monitor.dir/src/process.cpp.o: ../src/process.cpp \
   /usr/include/c++/11/bits/regex.tcc \
   /usr/include/c++/11/bits/regex_executor.h \
   /usr/include/c++/11/bits/regex_executor.tcc \
+  ../include/processor.h \
+  ../include/system.h \
+  ../include/process.h \
   ../include/processor.h
 
 CMakeFiles/monitor.dir/src/processor.cpp.o: ../src/processor.cpp \

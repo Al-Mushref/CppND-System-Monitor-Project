@@ -11,6 +11,8 @@
 #include "processor.h"
 #include "system.h"
 
+using std::ifstream;
+using std::istringstream;
 using std::string;
 using std::to_string;
 using std::vector;
@@ -26,11 +28,11 @@ float Process::CpuUtilization() {
 
 // Returns the command that generated this process
 string Process::Command() {
-  std::ifstream cmd_file(LinuxParser::kProcDirectory + to_string(pid_) +
-                         LinuxParser::kCmdlineFilename);
+  ifstream cmd_file(LinuxParser::kProcDirectory + to_string(pid_) +
+                    LinuxParser::kCmdlineFilename);
 
   if (!cmd_file.is_open()) {
-    throw std::runtime_error("could not open file");
+    throw std::runtime_error("cannot open command file file");
   }
   string cmd_line;
   getline(cmd_file, cmd_line);
@@ -39,20 +41,20 @@ string Process::Command() {
 
 // Returns this process's memory utilization
 string Process::Ram() {
-  std::ifstream ifs(LinuxParser::kProcDirectory + std::to_string(pid_) +
-                    LinuxParser::kStatusFilename);
-  if (!ifs.is_open()) {
-    throw std::runtime_error("cannot open file");
+  ifstream status_file(LinuxParser::kProcDirectory + to_string(pid_) +
+                       LinuxParser::kStatusFilename);
+  if (!status_file.is_open()) {
+    throw std::runtime_error("cannot open status file");
   }
   string line;
   string ram;
-  while (getline(ifs, line)) {
-    std::istringstream iss(line);
+  while (getline(status_file, line)) {
+    istringstream iss(line);
     string key;
     long value;
     if (iss >> key >> value) {
       if (key == "VmSize:") {
-        ram = std::to_string(value / 1024);
+        ram = to_string(value / 1024);
       }
     }
   }
@@ -62,32 +64,32 @@ string Process::Ram() {
 // Returns the user (name) that generated this process
 string Process::User() {
   // FIND UID
-  std::ifstream status_file(LinuxParser::kProcDirectory + to_string(pid_) +
-                            LinuxParser::kStatusFilename);
+  ifstream status_file(LinuxParser::kProcDirectory + to_string(pid_) +
+                       LinuxParser::kStatusFilename);
   if (!status_file.is_open()) {
     throw std::runtime_error("cannot open status file");
   }
   string line;
   while (getline(status_file, line)) {
-    std::istringstream iss(line);
+    istringstream iss(line);
     string key;
     long value;
     if (iss >> key >> value) {
       if (key == "Uid:") {
-        uid_ = std::to_string(value);
+        uid_ = to_string(value);
         break;
       }
     }
   }
   // FIND USER CORRESPONDING TO UID
   string user;
-  std::ifstream pass_file(LinuxParser::kPasswordPath);
+  ifstream pass_file(LinuxParser::kPasswordPath);
   if (!pass_file.is_open()) {
     throw std::runtime_error("cannot open password path");
   }
   string ps_line;
   while (getline(pass_file, ps_line)) {
-    std::istringstream iss(ps_line);
+    istringstream iss(ps_line);
     std::string username, x, uid_str;
     if (getline(iss, username, ':') && getline(iss, x, ':') &&
         getline(iss, uid_str, ':')) {
@@ -105,15 +107,15 @@ string Process::User() {
 
 // Returns the age of this process (in seconds)
 long int Process::UpTime() {
-  std::ifstream stat_file(LinuxParser::kProcDirectory + std::to_string(pid_) +
-                          LinuxParser::kStatFilename);
+  ifstream stat_file(LinuxParser::kProcDirectory + to_string(pid_) +
+                     LinuxParser::kStatFilename);
   if (!stat_file.is_open()) {
     throw std::runtime_error("Cannot open stat file");
   }
 
   std::string line;
   std::getline(stat_file, line);
-  std::istringstream iss(line);
+  istringstream iss(line);
 
   // POPULATE THE VECTOR WITH ALL VALUES FROM ISS FROM START TO END
   std::vector<std::string> stat_values(std::istream_iterator<std::string>{iss},
